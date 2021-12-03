@@ -38,7 +38,7 @@ module id(
            output reg[`RegAddrBus]     wd_o,
            output reg                  wreg_o
        );
-wire[5:0] op = inst_i[31:26];
+wire[5:0] op = inst_i[31:26];// 操作码
 wire[4:0] op2 = inst_i[10:6];
 wire[5:0] op3 = inst_i[5:0];
 wire[4:0] op4 = inst_i[20:16];
@@ -147,6 +147,8 @@ always @(*) begin
             default: begin
             end
         endcase
+        
+        // 3条移位指令
         if (inst_i[31:21]==11'b00000000000) begin
             if (op3==`EXE_SLL) begin
                 wreg_o <= `WriteEnable;

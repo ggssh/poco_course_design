@@ -61,8 +61,11 @@ initial begin
     rst=`RstEnable;
     #100;
     rst=`RstDisable;
-    reg1_data_i=32'h12345678;
-    reg2_data_i=32'hfedcba98;
+    // reg1_data_i=32'h12345678;
+    // reg2_data_i=32'hfedcba98;
+
+    reg1_data_i=32'h00000002;
+    reg2_data_i=32'h00000001;
     for(i=0;i<12;i=i+1) begin
         inst_i=inst_array[i];
         #20;

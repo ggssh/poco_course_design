@@ -72,20 +72,24 @@
 `define NOP_OP 4'b1111
 
 // 操作码
-// 指令
+// 逻辑运算指令
 `define EXE_AND 6'b100100
 `define EXE_OR 6'b100101
 `define EXE_XOR 6'b100110
 `define EXE_NOR 6'b100111
 `define EXE_LUI 6'b001111
 
+// 移位指令
 `define EXE_SLL 6'b000000
 `define EXE_SRL 6'b000010
 `define EXE_SRA 6'b000011
 
-`define EXE_SLT 6'b101010
-`define EXE_SLTU 6'b101011
-
+// 算数运算指令
 `define EXE_ADD 6'b100000
+`define EXE_ADDU 6'b100001 // ADDU
 `define EXE_SUB 6'b100010
+`define EXE_SUBU 6'b100011 // SUBU
+`define EXE_SLT 6'b101010
+`define EXE_SLTU 6'b101011 // SLTU 
+
 `define EXE_SPECIAL_INST 6'b000000
