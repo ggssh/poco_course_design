@@ -1,0 +1,15 @@
+poco_course_design.cache/
+
+poco_course_design.hw/
+
+poco_course_design.ip_user_files/
+
+poco_course_design.sim/
+
+poco_course_design.xpr
+
+*.wcfg
+
+poco_course_design.runs/
+
+.Xil/
