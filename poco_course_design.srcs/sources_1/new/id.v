@@ -24,26 +24,28 @@
 module id(
            input wire rst,
            input wire[`InstBus]        inst_i,
-           input wire[`RegBus]         reg1_data_i,
-           input wire[`RegBus]         reg2_data_i,
+           input wire[`RegBus]         reg1_data_i,// 从regfile读入数据1
+           input wire[`RegBus]         reg2_data_i,// 从regfile读入数据2
            // 送到regfile的信息
            output reg                  reg1_read_o,
            output reg                  reg2_read_o,
            output reg[`RegAddrBus]     reg1_addr_o,
            output reg[`RegAddrBus]     reg2_addr_o,
            // 送到执行阶段的信息
-           output reg[`AluOpBus]       aluop_o,
-           output reg[`RegBus]         reg1_o,
-           output reg[`RegBus]         reg2_o,
-           output reg[`RegAddrBus]     wd_o,
-           output reg                  wreg_o
+           output reg[`AluOpBus]       aluop_o,// 译码阶段运算类型
+           output reg[`RegBus]         reg1_o,// 译码阶段源操作数1
+           output reg[`RegBus]         reg2_o,// 译码阶段源操作数2
+           output reg[`RegAddrBus]     wd_o,// 目的寄存器地址, inst_i[15:11]
+           output reg                  wreg_o// 是否要写入寄存器
        );
-wire[5:0] op = inst_i[31:26];// 操作码
+wire[5:0] op = inst_i[31:26];
 wire[4:0] op2 = inst_i[10:6];
 wire[5:0] op3 = inst_i[5:0];
 wire[4:0] op4 = inst_i[20:16];
-reg[`RegBus] imm;
-reg instvalid;
+
+reg[`RegBus] imm;// 立即数
+reg instvalid;// 标志指令是否有效
+
 always @(*) begin
     if(rst == `RstEnable) begin
         aluop_o <= `NOP_OP;
@@ -119,6 +121,10 @@ always @(*) begin
                                 reg1_read_o <= 1'b1;
                                 reg2_read_o <= 1'b1;
                                 instvalid <= `InstValid;
+                            end
+                            `EXE_ADDU:begin
+                                wreg_o <= `WriteEnable;
+                                // aluop_o <= 
                             end
                             `EXE_SUB: begin
                                 wreg_o <= `WriteEnable;

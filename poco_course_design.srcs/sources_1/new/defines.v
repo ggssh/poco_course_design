@@ -38,8 +38,8 @@
 `define NOPRegAddr 5'b00000
 
 // 指令存储器inst_rom
-`define InstAddrBus 31:0
-`define InstBus 31:0
+`define InstAddrBus 31:0// 指令地址线宽度为32
+`define InstBus 31:0// 指令长度为32
 `define InstMemNum 131072
 `define InstMemNumLog2 17
 `define ChipEnable 1'b1
@@ -54,22 +54,22 @@
 
 `define InstValid 1'b0
 `define InstInvalid 1'b1
-`define AluOpBus 3:0
+`define AluOpBus 5:0 // 提前预留好之后指令的位置
 
 // alu_op
-`define ADD_OP 4'b0000
-`define SUB_OP 4'b0001
-`define SLT_OP 4'b0010
-`define SLTU_OP 4'b0011
-`define AND_OP 4'b0100
-`define NOR_OP 4'b0101
-`define OR_OP 4'b0110
-`define XOR_OP 4'b0111
-`define SLL_OP 4'b1000
-`define SRL_OP 4'b1001
-`define SRA_OP 4'b1010
-`define LUI_OP 4'b1011
-`define NOP_OP 4'b1111
+`define ADD_OP 6'b000000
+`define SUB_OP 6'b000001
+`define SLT_OP 6'b000010
+`define SLTU_OP 6'b000011
+`define AND_OP 6'b000100
+`define NOR_OP 6'b000101
+`define OR_OP 6'b000110
+`define XOR_OP 6'b000111
+`define SLL_OP 6'b001000
+`define SRL_OP 6'b001001
+`define SRA_OP 6'b001010
+`define LUI_OP 6'b001011
+`define NOP_OP 6'b111111
 
 // 操作码
 // 逻辑运算指令
@@ -91,5 +91,6 @@
 `define EXE_SUBU 6'b100011 // SUBU
 `define EXE_SLT 6'b101010
 `define EXE_SLTU 6'b101011 // SLTU 
+`define EXE_ADDIU 6'b001001 // ADDIU
 
 `define EXE_SPECIAL_INST 6'b000000

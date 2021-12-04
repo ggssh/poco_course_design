@@ -24,18 +24,26 @@
 module regfile(
            input wire rst,// 复位信号,高电平有效
            input wire clk,// 时钟信号
-           input wire[4:0] waddr,//要写入的寄存器地址
-           input wire[31:0] wdata,//要写入的数据
+
+           // 写端口
+           input wire[`RegAddrBus] waddr,//要写入的寄存器地址
+           input wire[`RegBus] wdata,//要写入的数据
            input wire we,//写使能信号
-           input wire[4:0] raddr1,//第一个读寄存器端口要读取的寄存器的地址
+
+           // 读端口1
+           input wire[`RegAddrBus] raddr1,//第一个读寄存器端口要读取的寄存器的地址
            input wire re1,//第一个读寄存器端口读使能信号
-           output reg[31:0] rdata1,//第一个读寄存器端口输出的寄存器值
-           input wire[4:0] raddr2,//第二个读寄存器端口要读取的寄存器的地址
+           output reg[`RegBus] rdata1,//第一个读寄存器端口输出的寄存器值
+
+           // 读端口2
+           input wire[`RegAddrBus] raddr2,//第二个读寄存器端口要读取的寄存器的地址
            input wire re2,//第二个读寄存器端口读使能信号
-           output reg[31:0] rdata2//第二个读寄存器端口输出的寄存器值
+           output reg[`RegBus] rdata2//第二个读寄存器端口输出的寄存器值
        );
-reg[31:0] regs[0:31];
+
+reg[`RegBus] regs[0:`RegNum-1];
 integer i;
+
 initial begin
     regs[0]=32'h0;
     regs[1]=32'h12345678;
@@ -45,47 +53,50 @@ initial begin
 end
 
 always @(posedge clk) begin
-    if(rst==1'b0) begin
-        if((we==1'b1)&&(waddr!=5'b0)) begin
+    if(rst==`RstDisable) begin
+        if((we==`WriteEnable)&&(waddr!=`RegNumLog2'h0)) begin
             regs[waddr] <= wdata;
         end
     end
 end
 
+// 读端口1
 always @(*) begin
-    if(rst == 1'b1) begin
-        rdata1 <= 32'h0;
+    if(rst == `RstEnable) begin
+        rdata1 <= `ZeroWord;
     end
-    else if ((raddr1==5'b0)&&(re1==1'b1)) begin
-        rdata1 <= 32'h0;
+    else if ((raddr1==`RegNumLog2'h0)&&(re1==`ReadEnable)) begin
+        rdata1 <= `ZeroWord;
     end
     // 解决数据相关问题
-    else if ((raddr1==waddr)&&(we==1'b1)&&(re1==1'b1)) begin
+    else if ((raddr1==waddr)&&(we==`WriteEnable)&&(re1==`ReadEnable)) begin
         rdata1 <= wdata;
     end
-    else if (re1 == 1'b1) begin
+    else if (re1 == `ReadEnable) begin
         rdata1 <= regs[raddr1];
     end
     else begin
-        rdata1 <= 32'h0;
+        rdata1 <= `ZeroWord;
     end
 end
 
+// 读端口2
 always @(*) begin
-    if(rst== 1'b1) begin
-        rdata2 <= 32'h0;
+    if(rst== `RstEnable) begin
+        rdata2 <= `ZeroWord;
     end
-    else if ((raddr2==5'b0)&&(re2=='b1)) begin
-        rdata2 <= 32'h0;
+    else if ((raddr2==`RegNumLog2'h0)&&(re2==`ReadEnable)) begin
+        rdata2 <= `ZeroWord;
     end
-    else if ((raddr2==waddr)&&(we==1'b1)&&(re2==1'b1)) begin
+    // 数据相关
+    else if ((raddr2==waddr)&&(we==`WriteEnable)&&(re2==`ReadEnable)) begin
         rdata2 <= wdata;
     end
-    else if (re2==1'b1) begin
+    else if (re2==`ReadEnable) begin
         rdata2 <= regs[raddr2];
     end
     else begin
-        rdata2 <= 32'h0;
+        rdata2 <= `ZeroWord;
     end
 end
 endmodule

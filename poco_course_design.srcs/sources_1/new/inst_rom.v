@@ -23,21 +23,21 @@
 
 module inst_rom(
            input wire ce,
-           input wire[31:0] addr,
-           output reg[31:0] inst
+           input wire[`InstAddrBus] addr,
+           output reg[`InstBus] inst
        );
 
-reg[31:0] inst_mem[0:131071];
+reg[`InstBus] inst_mem[0:`InstMemNum-1];
 
 initial
-    $readmemh("../../../../initial_data/inst_rom1.data",inst_mem);
+    $readmemh("../../../../initial_data/inst_rom.data",inst_mem);
 
 always @(*) begin
-    if(ce == 0) begin
-        inst <= 32'b0;
+    if(ce == `ChipDisable) begin
+        inst <= `ZeroWord;
     end
     else begin
-        inst <= inst_mem[addr[31:2]];//字寻址,舍去地址的最低两位字内地址(即0和1位)
+        inst <= inst_mem[addr[`InstMemNumLog2+1:2]];//字寻址,舍去地址的最低两位字内地址(即0和1位)
     end
 end
 endmodule
