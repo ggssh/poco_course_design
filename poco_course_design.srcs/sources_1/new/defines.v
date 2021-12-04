@@ -69,6 +69,9 @@
 `define SRL_OP 6'b001001
 `define SRA_OP 6'b001010
 `define LUI_OP 6'b001011
+`define ADDU_OP 6'b001100
+`define ADDIU_OP 6'b001101
+`define SUBU_OP 6'b001110
 `define NOP_OP 6'b111111
 
 // 操作码

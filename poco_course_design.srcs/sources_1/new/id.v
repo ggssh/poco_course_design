@@ -43,7 +43,7 @@ wire[4:0] op2 = inst_i[10:6];
 wire[5:0] op3 = inst_i[5:0];
 wire[4:0] op4 = inst_i[20:16];
 
-reg[`RegBus] imm;// 立即数
+reg[`RegBus] imm;// 32位立即数
 reg instvalid;// 标志指令是否有效
 
 always @(*) begin
@@ -122,9 +122,12 @@ always @(*) begin
                                 reg2_read_o <= 1'b1;
                                 instvalid <= `InstValid;
                             end
-                            `EXE_ADDU:begin
+                            `EXE_ADDU: begin
                                 wreg_o <= `WriteEnable;
-                                // aluop_o <= 
+                                aluop_o <= `ADDU_OP;
+                                reg1_read_o <= 1'b1;
+                                reg2_read_o <= 1'b1;
+                                instvalid <= `InstValid;
                             end
                             `EXE_SUB: begin
                                 wreg_o <= `WriteEnable;
@@ -150,10 +153,19 @@ always @(*) begin
                 wd_o <= inst_i[20:16];
                 instvalid <= `InstValid;
             end
+            `EXE_ADDIU: begin
+                wreg_o <= `WriteEnable;
+                aluop_o <= `ADDIU_OP;
+                reg1_read_o <= 1'b1;
+                reg2_read_o <= 1'b0;
+                imm <= {{16{inst_i[15]}},inst_i[15:0]};
+                wd_o <= inst_i[20:16];
+                instvalid <= `InstValid;
+            end
             default: begin
             end
         endcase
-        
+
         // 3条移位指令
         if (inst_i[31:21]==11'b00000000000) begin
             if (op3==`EXE_SLL) begin
@@ -187,6 +199,7 @@ always @(*) begin
     end// end (rst != `RstEnable)
 end// end always
 
+// 源操作数1
 always @(*) begin
     if(rst == `RstEnable) begin
         reg1_o <= `ZeroWord;
@@ -202,6 +215,7 @@ always @(*) begin
     end
 end// end always
 
+// 源操作数2
 always @(*) begin
     if(rst == `RstEnable) begin
         reg2_o <= `ZeroWord;

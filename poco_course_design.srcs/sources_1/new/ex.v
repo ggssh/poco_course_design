@@ -23,15 +23,19 @@
 
 module ex(
            input wire rst,
-           input [`AluOpBus] alu_control,// ALU控制信号
-           input [`RegBus] alu_src1,// ALU操作数1,为补码
-           input [`RegBus] alu_src2,// ALU操作数2,为补码
-           output reg [`RegBus] alu_result,// AlU运算结果
 
-           output reg[`RegAddrBus] wd_o,
-           output reg wreg_o,
+           // 译码阶段送到执行阶段的信息
+           input wire[`AluOpBus] alu_control,// ALU控制信号
+           input wire[`RegBus] alu_src1,// ALU操作数1,为补码
+           input wire[`RegBus] alu_src2,// ALU操作数2,为补码
            input wire wreg_i,
-           input wire[`RegAddrBus] wd_i
+           input wire[`RegAddrBus] wd_i,
+
+           // 执行的结果
+           output reg [`RegBus] alu_result,// AlU运算结果
+           output reg[`RegAddrBus] wd_o,
+           output reg wreg_o
+
        );
 
 wire[`RegBus] alu_src2_mux;
@@ -56,7 +60,7 @@ always @(*) begin
         wd_o=wd_i;
         wreg_o=wreg_i;
         case(alu_control)
-            `ADD_OP,`SUB_OP: begin
+            `ADD_OP,`SUB_OP,`ADDU_OP,`ADDIU_OP: begin
                 alu_result = result_sum;
             end
             `SLT_OP,`SLTU_OP: begin

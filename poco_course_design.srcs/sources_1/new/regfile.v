@@ -44,11 +44,13 @@ module regfile(
 reg[`RegBus] regs[0:`RegNum-1];
 integer i;
 
+// 往寄存器里先存入数据
 initial begin
     regs[0]=32'h0;
-    regs[1]=32'h12345678;
-    for(i=2;i<32;i=i+1) begin
-        regs[i]=regs[i-1]+32'h01010101;
+    // regs[1]=32'h12345678;
+    regs[1]=32'h00000001;
+    for(i=2;i<`RegNum;i=i+1) begin
+        regs[i]=regs[i-1]+32'h00000001;
     end
 end
 
