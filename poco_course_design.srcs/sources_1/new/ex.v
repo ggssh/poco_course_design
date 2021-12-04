@@ -42,7 +42,11 @@ wire[`RegBus] alu_src2_mux;
 wire[`RegBus] result_sum;
 wire src1_lt_src2;
 
-assign alu_src2_mux = ((alu_control==`SUB_OP)||(alu_control==`SLT_OP))? (~alu_src2)+1:alu_src2; // 取反加一:不变
+assign alu_src2_mux = ((alu_control==`SUB_OP)||
+                       (alu_control==`SLT_OP)||
+                       (alu_control==`SUBU_OP))?
+       (~alu_src2)+1:alu_src2; // 取反加一:不变
+       
 assign result_sum = alu_src1 + alu_src2_mux;
 assign src1_lt_src2 = (alu_control==`SLT_OP)? // signed : unsigned
        ((alu_src1[31]&&!alu_src2[31])||// 操作数1为负且操作数2为正
@@ -60,7 +64,7 @@ always @(*) begin
         wd_o=wd_i;
         wreg_o=wreg_i;
         case(alu_control)
-            `ADD_OP,`SUB_OP,`ADDU_OP,`ADDIU_OP: begin
+            `ADD_OP,`SUB_OP,`ADDU_OP,`ADDIU_OP,`SUBU_OP: begin
                 alu_result = result_sum;
             end
             `SLT_OP,`SLTU_OP: begin
@@ -90,7 +94,7 @@ always @(*) begin
                 | alu_src2>> alu_src1[4:0]; // 将前者运算结果和alu_src2右移结果进行或运算
             end
             `LUI_OP: begin
-                alu_result = {alu_src2[15:0],16'd0}; // 将立即数写入寄存器
+                alu_result = alu_src2;
             end
             default: begin
                 alu_result = `ZeroWord;

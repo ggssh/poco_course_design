@@ -136,6 +136,13 @@ always @(*) begin
                                 reg2_read_o <= 1'b1;
                                 instvalid <= `InstValid;
                             end
+                            `EXE_SUBU:begin
+                                wreg_o <= `WriteEnable;
+                                aluop_o <= `SUBU_OP;
+                                reg1_read_o <= 1'b1;
+                                reg2_read_o <= 1'b1;
+                                instvalid <= `InstValid;
+                            end
                             default: begin
                             end
                         endcase
@@ -146,7 +153,7 @@ always @(*) begin
             end
             `EXE_LUI: begin
                 wreg_o <= `WriteEnable;
-                aluop_o <= `OR_OP;
+                aluop_o <= `LUI_OP;
                 reg1_read_o <= 1'b1;
                 reg2_read_o <= 1'b0;
                 imm <= {inst_i[15:0],16'h0};
