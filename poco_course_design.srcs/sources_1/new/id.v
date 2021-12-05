@@ -23,21 +23,27 @@
 
 module id(
            input wire rst,
+
+           // 来自regfile
            input wire[`InstBus]        inst_i,
            input wire[`RegBus]         reg1_data_i,// 从regfile读入数据1
            input wire[`RegBus]         reg2_data_i,// 从regfile读入数据2
-           // 送到regfile的信息
+
+           // 送到regfile
            output reg                  reg1_read_o,
            output reg                  reg2_read_o,
            output reg[`RegAddrBus]     reg1_addr_o,
            output reg[`RegAddrBus]     reg2_addr_o,
-           // 送到执行阶段的信息
+
+           // 送到ex
            output reg[`AluOpBus]       aluop_o,// 译码阶段运算类型
            output reg[`RegBus]         reg1_o,// 译码阶段源操作数1
            output reg[`RegBus]         reg2_o,// 译码阶段源操作数2
            output reg[`RegAddrBus]     wd_o,// 目的寄存器地址, inst_i[15:11]
-           output reg                  wreg_o// 是否要写入寄存器
+           output reg                  wreg_o,// 是否要写入寄存器
+           output wire[`RegBus]        inst_o // 将inst_i输出至执行阶段
        );
+       
 wire[5:0] op = inst_i[31:26];
 wire[4:0] op2 = inst_i[10:6];
 wire[5:0] op3 = inst_i[5:0];
@@ -45,6 +51,8 @@ wire[4:0] op4 = inst_i[20:16];
 
 reg[`RegBus] imm;// 32位立即数
 reg instvalid;// 标志指令是否有效
+
+assign inst_o = inst_i;// inst_o的值就是从inst_rom中取出来的指令inst_i
 
 always @(*) begin
     if(rst == `RstEnable) begin
@@ -56,7 +64,7 @@ always @(*) begin
         reg2_read_o <= 1'b0;
         reg1_addr_o <= `NOPRegAddr;
         reg2_addr_o <= `NOPRegAddr;
-        imm <= 32'h0;
+        imm <= `ZeroWord;
     end// end (rst == `RstEnable)
     else begin
         aluop_o <= `NOP_OP;
@@ -136,7 +144,7 @@ always @(*) begin
                                 reg2_read_o <= 1'b1;
                                 instvalid <= `InstValid;
                             end
-                            `EXE_SUBU:begin
+                            `EXE_SUBU: begin
                                 wreg_o <= `WriteEnable;
                                 aluop_o <= `SUBU_OP;
                                 reg1_read_o <= 1'b1;
@@ -167,6 +175,22 @@ always @(*) begin
                 reg2_read_o <= 1'b0;
                 imm <= {{16{inst_i[15]}},inst_i[15:0]};
                 wd_o <= inst_i[20:16];
+                instvalid <= `InstValid;
+            end
+            `EXE_LW:begin
+                wreg_o <= `WriteEnable;
+                aluop_o <= `LW_OP;
+                reg1_read_o <= 1'b1;
+                reg2_read_o <= 1'b0;
+                wd_o <= inst_i[20:16];
+                instvalid <= `InstValid;
+            end
+            `EXE_SW:begin
+                wreg_o <= `WriteDisable;
+                aluop_o <= `SW_OP;
+                reg1_read_o <= 1'b1;
+                reg2_read_o <= 1'b1;// 需要得到rt寄存器中的数
+                wd_o <= inst_i[20:16];//其实没啥用
                 instvalid <= `InstValid;
             end
             default: begin

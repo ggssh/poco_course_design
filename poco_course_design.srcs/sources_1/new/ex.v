@@ -24,29 +24,39 @@
 module ex(
            input wire rst,
 
-           // 译码阶段送到执行阶段的信息
-           input wire[`AluOpBus] alu_control,// ALU控制信号
-           input wire[`RegBus] alu_src1,// ALU操作数1,为补码
-           input wire[`RegBus] alu_src2,// ALU操作数2,为补码
+           // 来自id
+           input wire[`AluOpBus] alu_control,// ALU控制信号(aluop_i)
+           input wire[`RegBus] alu_src1,// ALU操作数1,为补码(reg1_i)
+           input wire[`RegBus] alu_src2,// ALU操作数2,为补码(reg2_i)
            input wire wreg_i,
            input wire[`RegAddrBus] wd_i,
+           input wire[`RegBus] inst_i,// 当前阶段执行的指令,即id的inst_i
 
-           // 执行的结果
+           // 送到mem
            output reg [`RegBus] alu_result,// AlU运算结果
            output reg[`RegAddrBus] wd_o,
-           output reg wreg_o
+           output reg wreg_o,
 
+           // store && load 送到ex/mem
+           output wire[`AluOpBus] aluop_o,
+           output wire[`RegBus] mem_addr_o,
+           output wire[`RegBus] reg2_o
        );
 
 wire[`RegBus] alu_src2_mux;
 wire[`RegBus] result_sum;
 wire src1_lt_src2;
 
+// 存储,加载
+assign aluop_o = alu_control;// 传递aluop直到mem模块
+assign mem_addr_o = alu_src1 + {{16{inst_i[15]}},inst_i[15:0]};// 计算offset(base)
+assign reg2_o = alu_src2;// LW:reg2_o=0;SW:reg2_o=rt寄存器中的值
+
 assign alu_src2_mux = ((alu_control==`SUB_OP)||
                        (alu_control==`SLT_OP)||
                        (alu_control==`SUBU_OP))?
        (~alu_src2)+1:alu_src2; // 取反加一:不变
-       
+
 assign result_sum = alu_src1 + alu_src2_mux;
 assign src1_lt_src2 = (alu_control==`SLT_OP)? // signed : unsigned
        ((alu_src1[31]&&!alu_src2[31])||// 操作数1为负且操作数2为正

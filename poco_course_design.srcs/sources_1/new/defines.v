@@ -72,6 +72,8 @@
 `define ADDU_OP 6'b001100
 `define ADDIU_OP 6'b001101
 `define SUBU_OP 6'b001110
+`define LW_OP 6'b001111
+`define SW_OP 6'b010000
 `define NOP_OP 6'b111111
 
 // 操作码
@@ -93,7 +95,11 @@
 `define EXE_SUB 6'b100010
 `define EXE_SUBU 6'b100011 // SUBU
 `define EXE_SLT 6'b101010
-`define EXE_SLTU 6'b101011 // SLTU 
+`define EXE_SLTU 6'b101011 // SLTU
 `define EXE_ADDIU 6'b001001 // ADDIU
+
+// 加载存储指令
+`define EXE_LW 6'b100011
+`define EXE_SW 6'b101011
 
 `define EXE_SPECIAL_INST 6'b000000

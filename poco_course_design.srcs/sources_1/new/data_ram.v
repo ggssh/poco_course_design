@@ -23,11 +23,15 @@
 
 module data_ram(
            input wire clk,
+
+           // 来自mem
            input wire ce, // 数据存储器使能信号
            input wire we, // 是否为写操作,为1表示写操作
            input wire[`DataAddrBus] addr, // 要访问的地址
            input wire[3:0] sel, // 字节选择信号
            input wire[`DataBus] data_i, // 要写入的数据
+
+           // 送到mem
            output reg [`DataBus] data_o // 读出的数据
        );
 
