@@ -24,13 +24,15 @@
 module ex(
            input wire rst,
 
-           // 来自id
+           // 来自id/ex
            input wire[`AluOpBus] alu_control,// ALU控制信号(aluop_i)
            input wire[`RegBus] alu_src1,// ALU操作数1,为补码(reg1_i)
            input wire[`RegBus] alu_src2,// ALU操作数2,为补码(reg2_i)
            input wire wreg_i,
            input wire[`RegAddrBus] wd_i,
            input wire[`RegBus] inst_i,// 当前阶段执行的指令,即id的inst_i
+           input wire[`RegBus] link_addr_i,// 处于执行阶段的转移指令要保存的返回地址
+           input wire is_in_delayslot_i,// 当前处于执行阶段的转移指令是否在延迟槽内
 
            // 送到mem
            output reg [`RegBus] alu_result,// AlU运算结果
@@ -105,6 +107,9 @@ always @(*) begin
             end
             `LUI_OP: begin
                 alu_result = alu_src2;
+            end
+            `JAL_OP:begin
+                alu_result = link_addr_i;
             end
             default: begin
                 alu_result = `ZeroWord;

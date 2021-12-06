@@ -30,7 +30,7 @@ module inst_rom(
 reg[`InstBus] inst_mem[0:`InstMemNum-1];
 
 initial
-    $readmemh("../../../../initial_data/inst_rom.data",inst_mem);
+    $readmemh("../../../../initial_data/inst_rom1.data",inst_mem);
 
 always @(*) begin
     if(ce == `ChipDisable) begin

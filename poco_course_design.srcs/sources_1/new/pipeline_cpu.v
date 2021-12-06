@@ -25,19 +25,19 @@ module pipeline_cpu(
            input wire clk,
            input wire rst,
            input wire[`RegBus] rom_data_i,
+
+           // 发送到inst_rom
            output wire[`RegBus] rom_addr_o,
            output wire rom_ce_o
        );
 
-pc_reg pc_reg0(
-           .clk(clk),
-           .rst(rst),
-           .pc(rom_addr_o),
-           .ce(rom_ce_o)
-       );
-
 // 连接IF/ID和ID模块
 wire[`InstBus] id_inst_i;
+wire[`InstAddrBus] id_pc_i;
+
+// 连接ID和pc_reg
+wire branch_flag;
+wire[`RegBus] branch_target_address;
 
 // 连接ID和ID/EX模块
 wire[`AluOpBus] id_aluop_o;
@@ -46,6 +46,10 @@ wire[`RegBus] id_reg2_o;
 wire[`RegAddrBus] id_wd_o;
 wire id_wreg_o;
 wire[`RegBus]  id_inst_o;
+wire next_inst_in_delayslot_o;
+wire[`RegBus] id_is_in_delayslot_o;
+wire[`RegBus] id_link_addr_o;
+wire is_in_delayslot_i;
 
 // 连接ID/EX模块和EX模块
 wire[`AluOpBus] ex_aluop_i;
@@ -54,6 +58,8 @@ wire[`RegBus] ex_reg2_i;
 wire[`RegAddrBus] ex_wd_i;
 wire ex_wreg_i;
 wire[`RegBus]  ex_inst_i;
+wire[`RegBus] ex_link_address_i;
+wire ex_is_in_delayslot_i;
 
 // 连接EX模块和EX/MEM模块(只写输出部分就行)
 wire[`RegBus] ex_wdata_o;
@@ -99,18 +105,31 @@ wire[`DataBus] ram_data_i;
 // 送到mem
 wire[`DataBus] ram_data_o;
 
+pc_reg pc_reg0(
+           .clk(clk),
+           .rst(rst),
+           .branch_flag_i(branch_flag),
+           .branch_target_address_i(branch_target_address),
+           .pc(rom_addr_o),// pc的值同样也要送到id和ex中,进行跳转
+           .ce(rom_ce_o)
+       );
+
 // 流水线寄存器
 // 时钟上升沿,输出变成输入
 if_id if_id0(
           .rst(rst),
           .clk(clk),
+          .if_pc(rom_addr_o),
           .if_inst(rom_data_i),
+          .id_pc(id_pc_i),
           .id_inst(id_inst_i)
       );
 
 id id0(
        .rst(rst),
+       .pc_i(id_pc_i),
        .inst_i(id_inst_i),
+       .is_in_delayslot_i(is_in_delayslot_i),
        .aluop_o(id_aluop_o),
        .reg1_o(id_reg1_o),
        .reg2_o(id_reg2_o),
@@ -122,7 +141,13 @@ id id0(
        .reg2_addr_o(reg2_addr),
        .reg1_data_i(reg1_data),
        .reg2_data_i(reg2_data),
-       .inst_o(id_inst_o)
+       .inst_o(id_inst_o),
+       .branch_flag_o(branch_flag),
+       .branch_target_address_o(branch_target_address),
+       // todo
+       .next_inst_in_delayslot_o(next_inst_in_delayslot_o),
+       .is_in_delayslot_o(id_is_in_delayslot_o),
+       .link_addr_o(id_link_addr_o)
    );
 
 id_ex id_ex0(
@@ -134,12 +159,18 @@ id_ex id_ex0(
           .id_wd(id_wd_o),
           .id_wreg(id_wreg_o),
           .id_inst(id_inst_o),
+          .id_link_address(id_link_addr_o),
+          .id_is_in_delayslot(id_is_in_delayslot_o),
+          .next_inst_in_delayslot_i(next_inst_in_delayslot_o),
           .ex_aluop(ex_aluop_i),
           .ex_reg1(ex_reg1_i),
           .ex_reg2(ex_reg2_i),
           .ex_wd(ex_wd_i),
           .ex_wreg(ex_wreg_i),
-          .ex_inst(ex_inst_i)
+          .ex_inst(ex_inst_i),
+          .ex_link_address(ex_link_address_i),
+          .ex_is_in_delayslot(ex_is_in_delayslot_i),
+          .is_in_delayslot_o(is_in_delayslot_i)
       );
 
 ex ex0(
@@ -150,6 +181,8 @@ ex ex0(
        .wd_i(ex_wd_i),
        .wreg_i(ex_wreg_i),
        .inst_i(ex_inst_i),
+       .link_addr_i(ex_link_address_i),
+       .is_in_delayslot_i(ex_is_in_delayslot_i),
        .alu_result(ex_wdata_o),
        .wd_o(ex_wd_o),
        .wreg_o(ex_wreg_o),

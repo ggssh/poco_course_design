@@ -27,6 +27,10 @@
 `define ReadEnable 1'b1 // 读信号
 `define ReadDisable 1'b0
 
+// pc模块
+`define Branch 1'b1// 转移
+`define NotBranch 1'b0// 不转移
+
 // 通用寄存器regfile
 `define RegAddrBus 4:0
 `define RegBus 31:0
@@ -44,6 +48,10 @@
 `define InstMemNumLog2 17
 `define ChipEnable 1'b1
 `define ChipDisable 1'b0
+
+// id模块
+`define InDelaySlot 1'b1 // 在延迟槽中
+`define NotInDelaySlot 1'b0 //不在
 
 // 数据存储器 data_rom
 `define DataAddrBus 31:0
@@ -74,6 +82,10 @@
 `define SUBU_OP 6'b001110
 `define LW_OP 6'b001111
 `define SW_OP 6'b010000
+`define BEQ_OP 6'b010001
+`define BNE_OP 6'b010010
+`define JAL_OP 6'b010011
+`define JR_OP 6'b010100
 `define NOP_OP 6'b111111
 
 // 操作码
@@ -101,5 +113,11 @@
 // 加载存储指令
 `define EXE_LW 6'b100011
 `define EXE_SW 6'b101011
+
+// 转移指令
+`define EXE_BEQ 6'b000100
+`define EXE_BNE 6'b000101
+`define EXE_JAL 6'b000011
+`define EXE_JR 6'b001000
 
 `define EXE_SPECIAL_INST 6'b000000

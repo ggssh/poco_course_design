@@ -24,15 +24,23 @@
 module if_id(
            input wire clk,
            input wire rst,
+           
+           // 来自取指阶段信号
            input[`InstBus] if_inst,
-           output reg[`InstBus] id_inst
+           input[`InstAddrBus] if_pc,
+
+           // 发送到id
+           output reg[`InstBus] id_inst,
+           output reg[`InstAddrBus] id_pc
        );
 always @(posedge clk) begin
     if(rst==`RstEnable) begin
         id_inst <= `ZeroWord;
+        id_pc <= `ZeroWord;
     end
     else begin
         id_inst <= if_inst;
+        id_pc <= if_pc;
     end
 end
 endmodule

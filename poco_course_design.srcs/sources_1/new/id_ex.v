@@ -32,6 +32,9 @@ module id_ex(
            input wire[`RegAddrBus] id_wd,
            input wire id_wreg,
            input wire[`RegBus] id_inst,// 来自id模块的信号inst_o
+           input wire[`RegBus] id_link_address,
+           input wire id_is_in_delayslot,
+           input wire next_inst_in_delayslot_i,
 
            // 送到ex
            output reg[`AluOpBus] ex_aluop,
@@ -39,7 +42,12 @@ module id_ex(
            output reg[`RegBus] ex_reg2,
            output reg[`RegAddrBus] ex_wd,
            output reg ex_wreg,
-           output reg[`RegBus] ex_inst// 送到ex模块
+           output reg[`RegBus] ex_inst,// 送到ex模块
+           output reg[`RegBus] ex_link_address,
+           output reg ex_is_in_delayslot,
+
+           // 送到id
+           output reg is_in_delayslot_o
        );
 
 always @(posedge clk) begin
@@ -50,6 +58,9 @@ always @(posedge clk) begin
         ex_wd <= `NOPRegAddr;
         ex_wreg <= `WriteDisable;
         ex_inst <= `ZeroWord;
+        ex_link_address <= `ZeroWord;
+        ex_is_in_delayslot <= `NotInDelaySlot;
+        is_in_delayslot_o <= `NotInDelaySlot;
     end
     else begin
         ex_aluop <= id_aluop;
@@ -58,6 +69,9 @@ always @(posedge clk) begin
         ex_wd <= id_wd;
         ex_wreg <= id_wreg;
         ex_inst <= id_inst;
+        ex_link_address <= id_link_address;
+        ex_is_in_delayslot <= id_is_in_delayslot;
+        is_in_delayslot_o <= next_inst_in_delayslot_i;
     end
 end
 endmodule
