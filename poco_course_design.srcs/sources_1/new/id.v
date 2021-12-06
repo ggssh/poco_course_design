@@ -35,6 +35,16 @@ module id(
            // 来自id/ex
            input wire is_in_delayslot_i, // 如果上一条指令是转移指令,那么下一条指令进入译码阶段时,该值为true表示是延迟槽指令
 
+           // 来自ex的运算结果
+           input wire ex_wreg_i,
+           input wire[`RegBus] ex_wdata_i,
+           input wire[`RegAddrBus] ex_wd_i,
+
+           // 来自mem的运算结果
+           input wire mem_wreg_i,
+           input wire[`RegBus] mem_wdata_i,
+           input wire[`RegAddrBus] mem_wd_i,
+
            // 送到regfile
            output reg                  reg1_read_o,
            output reg                  reg2_read_o,
@@ -312,6 +322,12 @@ always @(*) begin
     if(rst == `RstEnable) begin
         reg1_o <= `ZeroWord;
     end
+    else if((reg1_read_o == 1'b1)&&(ex_wreg_i == 1'b1)&&(ex_wd_i == reg1_addr_o)) begin
+        reg1_o <= ex_wdata_i;
+    end
+    else if((reg1_read_o == 1'b1)&&(ex_wreg_i == 1'b1)&&(mem_wreg_i == reg1_addr_o)) begin
+        reg1_o <= mem_wdata_i;
+    end
     else if (reg1_read_o == 1'b1) begin
         reg1_o <= reg1_data_i;
     end
@@ -327,6 +343,12 @@ end// end always
 always @(*) begin
     if(rst == `RstEnable) begin
         reg2_o <= `ZeroWord;
+    end
+    else if((reg2_read_o == 1'b1)&&(ex_wreg_i == 1'b1)&&(ex_wd_i == reg2_addr_o)) begin
+        reg2_o <= ex_wdata_i;
+    end
+    else if((reg2_read_o == 1'b1)&&(ex_wreg_i == 1'b1)&&(mem_wreg_i == reg2_addr_o)) begin
+        reg2_o <= mem_wdata_i;
     end
     else if (reg2_read_o == 1'b1) begin
         reg2_o <= reg2_data_i;

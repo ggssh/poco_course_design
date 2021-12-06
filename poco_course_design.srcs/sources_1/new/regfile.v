@@ -70,7 +70,9 @@ always @(*) begin
     else if ((raddr1==`RegNumLog2'h0)&&(re1==`ReadEnable)) begin
         rdata1 <= `ZeroWord;
     end
-    // 解决数据相关问题
+    // 解决数据相关问题(相隔两条指令)
+    // 如果要读取的寄存器是在下一个时钟上升沿要写入的寄存器
+    // 那么就将要写入的数据作为结果直接输出(读端口2与之相同)
     else if ((raddr1==waddr)&&(we==`WriteEnable)&&(re1==`ReadEnable)) begin
         rdata1 <= wdata;
     end

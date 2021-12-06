@@ -157,7 +157,14 @@ id id0(
        // todo
        .next_inst_in_delayslot_o(next_inst_in_delayslot_o),
        .is_in_delayslot_o(id_is_in_delayslot_o),
-       .link_addr_o(id_link_addr_o)
+       .link_addr_o(id_link_addr_o),
+       // 解决相邻指令间存在数据相关,相隔一条指令间存在数据相关
+       .ex_wreg_i(ex_wreg_o),
+       .ex_wdata_i(ex_wdata_o),
+       .ex_wd_i(ex_wd_o),
+       .mem_wreg_i(mem_wreg_o),
+       .mem_wdata_i(mem_wdata_o),
+       .mem_wd_i(mem_wd_o)
    );
 
 id_ex id_ex0(
