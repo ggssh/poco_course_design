@@ -60,7 +60,7 @@ assign alu_src2_mux = ((alu_control==`SUB_OP)||
        (~alu_src2)+1:alu_src2; // 取反加一:不变
 
 assign result_sum = alu_src1 + alu_src2_mux;
-assign src1_lt_src2 = (alu_control==`SLT_OP)? // signed : unsigned
+assign src1_lt_src2 = (alu_control==`SLT_OP||alu_control==`SLTI_OP)? // signed : unsigned
        ((alu_src1[31]&&!alu_src2[31])||// 操作数1为负且操作数2为正
         (!alu_src1[31]&&!alu_src2[31]&&result_sum[31])||// 操作数1和操作数2都为正,且操作数1-操作数2的结果为负
         (alu_src1[31]&&alu_src2[31]&&result_sum[31]))// 操作数1和操作数2都为负,且操作数1-操作数2的结果为正
@@ -76,31 +76,31 @@ always @(*) begin
         wd_o=wd_i;
         wreg_o=wreg_i;
         case(alu_control)
-            `ADD_OP,`SUB_OP,`ADDU_OP,`ADDIU_OP,`SUBU_OP: begin
+            `ADD_OP,`SUB_OP,`ADDU_OP,`ADDIU_OP,`ADDI_OP,`SUBU_OP: begin
                 alu_result = result_sum;
             end
-            `SLT_OP,`SLTU_OP: begin
+            `SLT_OP,`SLTU_OP,`SLTI_OP,`SLTIU_OP: begin
                 alu_result = src1_lt_src2;
             end
-            `AND_OP: begin
+            `AND_OP,`ANDI_OP: begin
                 alu_result = alu_src1 & alu_src2;
             end
             `NOR_OP: begin
                 alu_result = ~(alu_src1 | alu_src2);
             end
-            `OR_OP: begin
+            `OR_OP,`ORI_OP: begin
                 alu_result = alu_src1 | alu_src2;
             end
-            `XOR_OP: begin
+            `XOR_OP,`XORI_OP: begin
                 alu_result = alu_src1 ^ alu_src2;
             end
-            `SLL_OP: begin
+            `SLL_OP,`SLLV_OP: begin
                 alu_result = alu_src2<<alu_src1[4:0]; // 移位量为5位立即数
             end
-            `SRL_OP: begin
+            `SRL_OP,`SRLV_OP: begin
                 alu_result = alu_src2>>alu_src1[4:0];
             end
-            `SRA_OP:// 算术右移
+            `SRA_OP,`SRAV_OP:// 算术右移
             begin
                 alu_result = ({32{alu_src2[31]}} << (6'd32-{1'b0,alu_src1[4:0]})) // 0xFFFF左移(32-移位量)
                 | alu_src2>> alu_src1[4:0]; // 将前者运算结果和alu_src2右移结果进行或运算
@@ -108,7 +108,7 @@ always @(*) begin
             `LUI_OP: begin
                 alu_result = alu_src2;
             end
-            `JAL_OP:begin
+            `JAL_OP: begin
                 alu_result = link_addr_i;
             end
             default: begin

@@ -86,6 +86,24 @@
 `define BNE_OP 6'b010010
 `define JAL_OP 6'b010011
 `define JR_OP 6'b010100
+//
+`define ADDI_OP 6'b010101
+`define SLTI_OP 6'b010110
+`define SLTIU_OP 6'b010111
+`define ANDI_OP 6'b011000
+`define ORI_OP 6'b011001
+`define XORI_OP 6'b011010
+`define SLLV_OP 6'b011011
+`define SRAV_OP 6'b011100
+`define SRLV_OP 6'b011101
+`define DIV_OP 6'b011110
+`define DIVU_OP 6'b011111
+`define MULT_OP 6'b100000
+`define MULTU_OP 6'b100001
+`define MFHI_OP 6'b100010
+`define MFLO_OP 6'b100011
+`define MTHI_OP 6'b100100
+`define MTLO_OP 6'b100101
 `define NOP_OP 6'b111111
 
 // 操作码
@@ -95,11 +113,17 @@
 `define EXE_XOR 6'b100110
 `define EXE_NOR 6'b100111
 `define EXE_LUI 6'b001111
+`define EXE_ANDI 6'b001100
+`define EXE_ORI 6'b001101
+`define EXE_XORI 6'b001110
 
 // 移位指令
 `define EXE_SLL 6'b000000
 `define EXE_SRL 6'b000010
 `define EXE_SRA 6'b000011
+`define EXE_SLLV 6'b000100
+`define EXE_SRAV 6'b000111
+`define EXE_SRLV 6'b000110
 
 // 算数运算指令
 `define EXE_ADD 6'b100000
@@ -109,6 +133,10 @@
 `define EXE_SLT 6'b101010
 `define EXE_SLTU 6'b101011 // SLTU
 `define EXE_ADDIU 6'b001001 // ADDIU
+`define EXE_ADDI 6'b001000
+`define EXE_SLTI 6'b001010
+`define EXE_SLTIU 6'b001011
+
 
 // 加载存储指令
 `define EXE_LW 6'b100011

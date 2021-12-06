@@ -202,6 +202,27 @@ always @(*) begin
                                 branch_flag_o <= `Branch;
                                 next_inst_in_delayslot_o <= `InDelaySlot;
                             end
+                            `EXE_SLLV: begin
+                                wreg_o <= `WriteEnable;
+                                aluop_o <= `SLLV_OP;
+                                reg1_read_o <= 1'b1;
+                                reg2_read_o <= 1'b1;
+                                instvalid <= `InstValid;
+                            end
+                            `EXE_SRAV: begin
+                                wreg_o <= `WriteEnable;
+                                aluop_o <= `SRAV_OP;
+                                reg1_read_o <= 1'b1;
+                                reg2_read_o <= 1'b1;
+                                instvalid <= `InstValid;
+                            end
+                            `EXE_SRLV: begin
+                                wreg_o <= `WriteEnable;
+                                aluop_o <= `SRLV_OP;
+                                reg1_read_o <= 1'b1;
+                                reg2_read_o <= 1'b1;
+                                instvalid <= `InstValid;
+                            end
                             default: begin
                             end
                         endcase
@@ -222,6 +243,33 @@ always @(*) begin
             `EXE_ADDIU: begin
                 wreg_o <= `WriteEnable;
                 aluop_o <= `ADDIU_OP;
+                reg1_read_o <= 1'b1;
+                reg2_read_o <= 1'b0;
+                imm <= {{16{inst_i[15]}},inst_i[15:0]};
+                wd_o <= inst_i[20:16];
+                instvalid <= `InstValid;
+            end
+            `EXE_ADDI: begin
+                wreg_o <= `WriteEnable;
+                aluop_o <= `ADDI_OP;
+                reg1_read_o <= 1'b1;
+                reg2_read_o <= 1'b0;
+                imm <= {{16{inst_i[15]}},inst_i[15:0]};
+                wd_o <= inst_i[20:16];
+                instvalid <= `InstValid;
+            end
+            `EXE_SLTI: begin
+                wreg_o <= `WriteEnable;
+                aluop_o <= `SLTI_OP;
+                reg1_read_o <= 1'b1;
+                reg2_read_o <= 1'b0;
+                imm <= {{16{inst_i[15]}},inst_i[15:0]};
+                wd_o <= inst_i[20:16];
+                instvalid <= `InstValid;
+            end
+            `EXE_SLTIU: begin
+                wreg_o <= `WriteEnable;
+                aluop_o <= `SLTIU_OP;
                 reg1_read_o <= 1'b1;
                 reg2_read_o <= 1'b0;
                 imm <= {{16{inst_i[15]}},inst_i[15:0]};
@@ -279,6 +327,33 @@ always @(*) begin
                     next_inst_in_delayslot_o <= `InDelaySlot;
                     branch_target_address_o <= pc_plus_4 + imm_sll2_signedext;
                 end
+            end
+            `EXE_ANDI: begin
+                wreg_o <= `WriteEnable;
+                aluop_o <= `ANDI_OP;
+                reg1_read_o <= 1'b1;
+                reg2_read_o <= 1'b0;
+                imm <= {16'h0,inst_i[15:0]};
+                wd_o <= inst_i[20:16];
+                instvalid <= `InstValid;
+            end
+            `EXE_ORI: begin
+                wreg_o <= `WriteEnable;
+                aluop_o <= `ORI_OP;
+                reg1_read_o <= 1'b1;
+                reg2_read_o <= 1'b0;
+                imm <= {16'h0,inst_i[15:0]};
+                wd_o <= inst_i[20:16];
+                instvalid <= `InstValid;
+            end
+            `EXE_XORI: begin
+                wreg_o <= `WriteEnable;
+                aluop_o <= `XORI_OP;
+                reg1_read_o <= 1'b1;
+                reg2_read_o <= 1'b0;
+                imm <= {16'h0,inst_i[15:0]};
+                wd_o <= inst_i[20:16];
+                instvalid <= `InstValid;
             end
             default: begin
             end
