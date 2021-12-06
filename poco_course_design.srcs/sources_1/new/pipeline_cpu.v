@@ -24,11 +24,21 @@
 module pipeline_cpu(
            input wire clk,
            input wire rst,
+           // 来自inst_rom
            input wire[`RegBus] rom_data_i,
 
            // 发送到inst_rom
            output wire[`RegBus] rom_addr_o,
-           output wire rom_ce_o
+           output wire rom_ce_o,
+
+           // 来自data_ram
+           input wire[`RegBus] ram_data_i,
+           // 发送到data_ram
+           output wire[`RegBus] mem_addr_o,
+           output wire[`RegBus] mem_data_o,
+           output wire[3:0] mem_sel_o,
+           output wire mem_we_o,
+           output wire mem_ce_o
        );
 
 // 连接IF/ID和ID模块
@@ -97,13 +107,13 @@ wire[`RegBus] reg2_data;
 
 // 连接MEM和data RAM
 // 来自mem
-wire ram_ce;
-wire ram_we;
-wire[`DataAddrBus] ram_addr;
-wire[3:0] ram_sel;
-wire[`DataBus] ram_data_i;
-// 送到mem
-wire[`DataBus] ram_data_o;
+// wire ram_ce;
+// wire ram_we;
+// wire[`DataAddrBus] ram_addr;
+// wire[3:0] ram_sel;
+// wire[`DataBus] ram_data_i;
+// // 送到mem
+// wire[`DataBus] ram_data_o;
 
 pc_reg pc_reg0(
            .clk(clk),
@@ -222,26 +232,14 @@ mem mem0(
         .wd_o(mem_wd_o),
         .wreg_o(mem_wreg_o),
         // 来自data RAM
-        .mem_data_i(ram_data_o),
+        .mem_data_i(ram_data_i),
         // 送到data RAM
-        .mem_addr_o(ram_addr),
-        .mem_data_o(ram_data_i),
-        .mem_sel_o(ram_sel),
-        .mem_we_o(ram_we),
-        .mem_ce_o(ram_ce)
+        .mem_addr_o(mem_addr_o),
+        .mem_data_o(mem_data_o),
+        .mem_sel_o(mem_sel_o),
+        .mem_we_o(mem_we_o),
+        .mem_ce_o(mem_ce_o)
     );
-
-data_ram data_ram0(
-             .clk(clk),
-             // 来自mem
-             .ce(ram_ce),
-             .we(ram_we),
-             .addr(ram_addr),
-             .sel(ram_sel),
-             .data_i(ram_data_i),
-             // 送到mem
-             .data_o(ram_data_o)
-         );
 
 mem_wb mem_wb0(
            .rst(rst),
