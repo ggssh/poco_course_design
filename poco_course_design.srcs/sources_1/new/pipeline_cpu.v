@@ -78,6 +78,9 @@ wire ex_wreg_o;
 wire[`AluOpBus] ex_aluop_o;
 wire[`RegBus] ex_mem_addr_o;
 wire[`RegBus] ex_reg2_o;
+wire[`RegBus] ex_hi_o;
+wire[`RegBus] ex_lo_o;
+wire ex_whilo_o;
 
 // 连接EX/MEM模块和MEM模块
 wire[`RegBus] mem_wdata_i;
@@ -86,16 +89,30 @@ wire mem_wreg_i;
 wire[`AluOpBus] mem_aluop_i;
 wire[`RegBus] mem_mem_addr_i;
 wire[`RegBus] mem_reg2_i;
+wire[`RegBus] mem_hi_i;
+wire[`RegBus] mem_lo_i;
+wire mem_whilo_i;
 
 // 连接MEM模块和MEM/WB模块
 wire[`RegBus] mem_wdata_o;
 wire[`RegAddrBus] mem_wd_o;
 wire mem_wreg_o;
+wire[`RegBus] mem_hi_o;
+wire[`RegBus] mem_lo_o;
+wire mem_whilo_o;
 
 // 连接MEM/WB模块和Regfile模块
 wire[`RegBus] wb_wdata_i;
 wire[`RegAddrBus] wb_wd_i;
 wire wb_wreg_i;
+// 连接MEM/WB和HILO
+wire[`RegBus] wb_hi_i;
+wire[`RegBus] wb_lo_i;
+wire wb_whilo_i;
+
+// HILO模块输出
+wire[`RegBus] hilo_hi_o;
+wire[`RegBus] hilo_lo_o;
 
 // 连接ID模块和RegFile模块
 wire reg1_read;
@@ -200,12 +217,23 @@ ex ex0(
        .inst_i(ex_inst_i),
        .link_addr_i(ex_link_address_i),
        .is_in_delayslot_i(ex_is_in_delayslot_i),
+       .hi_i(hilo_hi_o),
+       .lo_i(hilo_lo_o),
+       .wb_hi_i(wb_hi_i),
+       .wb_lo_i(wb_lo_i),
+       .wb_whilo_i(wb_whilo_i),
+       .mem_hi_i(mem_hi_o),
+       .mem_lo_i(mem_lo_o),
+       .mem_whilo_i(mem_whilo_o),
        .alu_result(ex_wdata_o),
        .wd_o(ex_wd_o),
        .wreg_o(ex_wreg_o),
        .aluop_o(ex_aluop_o),
        .mem_addr_o(ex_mem_addr_o),
-       .reg2_o(ex_reg2_o)
+       .reg2_o(ex_reg2_o),
+       .hi_o(ex_hi_o),
+       .lo_o(ex_lo_o),
+       .whilo_o(ex_whilo_o)
    );
 
 ex_mem ex_mem0(
@@ -214,9 +242,15 @@ ex_mem ex_mem0(
            .ex_wdata(ex_wdata_o),
            .ex_wd(ex_wd_o),
            .ex_wreg(ex_wreg_o),
+           .ex_hi(ex_hi_o),
+           .ex_lo(ex_lo_o),
+           .ex_whilo(ex_whilo_o),
            .mem_wdata(mem_wdata_i),
            .mem_wd(mem_wd_i),
            .mem_wreg(mem_wreg_i),
+           .mem_hi(mem_hi_i),
+           .mem_lo(mem_lo_i),
+           .mem_whilo(mem_whilo_i),
            .ex_aluop(ex_aluop_o),
            .ex_mem_addr(ex_mem_addr_o),
            .ex_reg2(ex_reg2_o),
@@ -227,17 +261,23 @@ ex_mem ex_mem0(
 
 mem mem0(
         .rst(rst),
-        // 来自ex
+        // 来自ex/mem
         .wdata_i(mem_wdata_i),
         .wd_i(mem_wd_i),
         .wreg_i(mem_wreg_i),
         .aluop_i(mem_aluop_i),
         .mem_addr_i(mem_mem_addr_i),
         .reg2_i(mem_reg2_i),
+        .hi_i(mem_hi_i),
+        .lo_i(mem_lo_i),
+        .whilo_i(mem_whilo_i),
         // 送到wb
         .wdata_o(mem_wdata_o),
         .wd_o(mem_wd_o),
         .wreg_o(mem_wreg_o),
+        .hi_o(mem_hi_o),
+        .lo_o(mem_lo_o),
+        .whilo_o(mem_whilo_o),
         // 来自data RAM
         .mem_data_i(ram_data_i),
         // 送到data RAM
@@ -254,10 +294,26 @@ mem_wb mem_wb0(
            .mem_wdata(mem_wdata_o),
            .mem_wd(mem_wd_o),
            .mem_wreg(mem_wreg_o),
+           .mem_hi(mem_hi_o),
+           .mem_lo(mem_lo_o),
+           .mem_whilo(mem_whilo_o),
            .wb_wdata(wb_wdata_i),
            .wb_wd(wb_wd_i),
-           .wb_wreg(wb_wreg_i)
+           .wb_wreg(wb_wreg_i),
+           .wb_hi(wb_hi_i),
+           .wb_lo(wb_lo_i),
+           .wb_whilo(wb_whilo_i)
        );
+
+hilo_reg hilo_reg0(
+             .clk(clk),
+             .rst(rst),
+             .we(wb_whilo_i),
+             .hi_i(wb_hi_i),
+             .lo_i(wb_lo_i),
+             .hi_o(hilo_hi_o),
+             .lo_o(hilo_lo_o)
+         );
 
 regfile regfile0(
             .clk(clk),

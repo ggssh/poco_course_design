@@ -29,11 +29,17 @@ module ex_mem(
            input wire[`RegAddrBus] ex_wd,
            input wire ex_wreg,
            input wire[`RegBus] ex_wdata,
+           input wire[`RegBus] ex_hi,
+           input wire[`RegBus] ex_lo,
+           input wire ex_whilo,
 
            // 送到mem
            output reg[`RegAddrBus] mem_wd,
            output reg mem_wreg,
            output reg[`RegBus] mem_wdata,
+           output reg[`RegBus] mem_hi,
+           output reg[`RegBus] mem_lo,
+           output reg mem_whilo,
 
            // store && load
            input wire[`AluOpBus] ex_aluop,
@@ -53,6 +59,9 @@ always @(posedge clk) begin
         mem_aluop <= `NOP_OP;
         mem_mem_addr <= `ZeroWord;
         mem_reg2 <= `ZeroWord;
+        mem_hi <= `ZeroWord;
+        mem_lo <= `ZeroWord;
+        mem_whilo <= `WriteDisable;
     end
     else begin
         mem_wd <= ex_wd;
@@ -61,6 +70,9 @@ always @(posedge clk) begin
         mem_aluop <= ex_aluop;
         mem_mem_addr <= ex_mem_addr;
         mem_reg2 <= ex_reg2;
+        mem_hi <= ex_hi;
+        mem_lo <= ex_lo;
+        mem_whilo <= ex_whilo;
     end // if
 end // always
 endmodule

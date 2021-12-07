@@ -24,18 +24,24 @@
 module mem(
            input wire rst,
 
-           // 来自ex
+           // 来自ex/mem
            input wire[`RegAddrBus] wd_i,
            input wire wreg_i,
            input wire[`RegBus] wdata_i,
            input wire[`AluOpBus] aluop_i,
            input wire[`RegBus] mem_addr_i,
            input wire[`RegBus] reg2_i,
+           input wire[`RegBus] hi_i,
+           input wire[`RegBus] lo_i,
+           input wire whilo_i,
 
-           // 送到wb
+           // 访存阶段的结果 送到wb
            output reg[`RegAddrBus] wd_o,
            output reg wreg_o,
            output reg[`RegBus] wdata_o,
+           output reg[`RegBus] hi_o,
+           output reg[`RegBus] lo_o,
+           output reg whilo_o,
 
            // 来自data RAM
            input wire[`RegBus] mem_data_i,
@@ -57,6 +63,9 @@ always @(*) begin
         wd_o <= `NOPRegAddr;
         wreg_o <= `WriteDisable;
         wdata_o <= `ZeroWord;
+        hi_o <= `ZeroWord;
+        lo_o <= `ZeroWord;
+        whilo_o <= `WriteDisable;
         mem_addr_o <= `ZeroWord;
         mem_data_o <= `ZeroWord;
         mem_sel_o <= 4'b0000;
@@ -67,29 +76,33 @@ always @(*) begin
         wd_o <= wd_i;
         wreg_o <= wreg_i;
         wdata_o <= wdata_i;
+        hi_o <= hi_i;
+        lo_o <= lo_i;
+        whilo_o <= whilo_i;
+        //
         mem_addr_o <= `ZeroWord;
         // mem_data_o <= `ZeroWord;
         mem_sel_o <= 4'b1111;
         mem_we <= `WriteDisable;
         mem_ce_o <= `ChipDisable;
         case(aluop_i)
-        `LW_OP: begin
-            mem_addr_o <= mem_addr_i;
-            mem_we <= `WriteDisable;// 不需要data RAM中写入
-            mem_sel_o <= 4'b1111;
-            mem_ce_o <= `ChipEnable;
-            wdata_o <= mem_data_i;
-        end
-        `SW_OP:begin
-            mem_addr_o <= mem_addr_i;
-            mem_we <= `WriteEnable;
-            mem_ce_o <= `ChipEnable;
-            mem_sel_o <= 4'b1111;
-            mem_data_o <= reg2_i;
-        end
-        default:begin
-        end
-    endcase
+            `LW_OP: begin
+                mem_addr_o <= mem_addr_i;
+                mem_we <= `WriteDisable;// 不需要data RAM中写入
+                mem_sel_o <= 4'b1111;
+                mem_ce_o <= `ChipEnable;
+                wdata_o <= mem_data_i;
+            end
+            `SW_OP: begin
+                mem_addr_o <= mem_addr_i;
+                mem_we <= `WriteEnable;
+                mem_ce_o <= `ChipEnable;
+                mem_sel_o <= 4'b1111;
+                mem_data_o <= reg2_i;
+            end
+            default: begin
+            end
+        endcase
     end // if
 end // always
 endmodule

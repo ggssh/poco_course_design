@@ -34,6 +34,23 @@ module ex(
            input wire[`RegBus] link_addr_i,// 处于执行阶段的转移指令要保存的返回地址
            input wire is_in_delayslot_i,// 当前处于执行阶段的转移指令是否在延迟槽内
 
+           // HILO模块给出的HI,LO寄存器的值
+           input wire[`RegBus] hi_i,
+           input wire[`RegBus] lo_i,
+
+           // 回写阶段的指令是否要写HI,LO,用于检测HI,LO寄存器带来的数据相关问题
+           input wire[`RegBus] wb_hi_i,
+           input wire[`RegBus] wb_lo_i,
+           input wire wb_whilo_i,
+           // 访存阶段的指令是否要写HI,LO,用于检测HI,LO寄存器带来的数据相关问题
+           input wire[`RegBus] mem_hi_i,
+           input wire[`RegBus] mem_lo_i,
+           input wire mem_whilo_i,
+           // 处于执行阶段的指令对HI,LO寄存器的写操作要求
+           output reg[`RegBus] hi_o,
+           output reg[`RegBus] lo_o,
+           output reg whilo_o,
+
            // 送到mem
            output reg [`RegBus] alu_result,// AlU运算结果
            output reg[`RegAddrBus] wd_o,
@@ -66,53 +83,94 @@ assign src1_lt_src2 = (alu_control==`SLT_OP||alu_control==`SLTI_OP)? // signed :
         (alu_src1[31]&&alu_src2[31]&&result_sum[31]))// 操作数1和操作数2都为负,且操作数1-操作数2的结果为正
        : (alu_src1<alu_src2);
 
+reg[`RegBus] HI;// 保存HI寄存器的最新值
+reg[`RegBus] LO;// 保存LO寄存器的最新值
+
+// 得到最新的HI,LO寄存器的值,解决数据相关问题
 always @(*) begin
-    if(rst == `RstEnable) begin
-        alu_result = `ZeroWord;
-        wd_o=`NOPRegAddr;
-        wreg_o=`WriteDisable;
+    if(rst==`RstEnable) begin
+        {HI,LO} <= {`ZeroWord,`ZeroWord};
+    end
+    else if (mem_whilo_i==`WriteEnable) begin
+        {HI,LO} <= {mem_hi_i,mem_lo_i};//访存阶段的指令要写HI,LO寄存器
+    end
+    else if(wb_whilo_i == `WriteEnable) begin
+        {HI,LO} <= {wb_hi_i,wb_lo_i};// 回写阶段指令要写HI,LO寄存器
     end
     else begin
-        wd_o=wd_i;
-        wreg_o=wreg_i;
+        {HI,LO} <= {hi_i,lo_i};
+    end
+end
+
+always @(*) begin
+    if(rst == `RstEnable) begin
+        alu_result <= `ZeroWord;
+        wd_o<=`NOPRegAddr;
+        wreg_o<=`WriteDisable;
+        whilo_o<=`WriteDisable;
+        hi_o<=`ZeroWord;
+        lo_o<=`ZeroWord;
+    end
+    else begin
+        wd_o<=wd_i;
+        wreg_o<=wreg_i;
         case(alu_control)
             `ADD_OP,`SUB_OP,`ADDU_OP,`ADDIU_OP,`ADDI_OP,`SUBU_OP: begin
-                alu_result = result_sum;
+                alu_result <= result_sum;
             end
             `SLT_OP,`SLTU_OP,`SLTI_OP,`SLTIU_OP: begin
-                alu_result = src1_lt_src2;
+                alu_result <= src1_lt_src2;
             end
             `AND_OP,`ANDI_OP: begin
-                alu_result = alu_src1 & alu_src2;
+                alu_result <= alu_src1 & alu_src2;
             end
             `NOR_OP: begin
-                alu_result = ~(alu_src1 | alu_src2);
+                alu_result <= ~(alu_src1 | alu_src2);
             end
             `OR_OP,`ORI_OP: begin
-                alu_result = alu_src1 | alu_src2;
+                alu_result <= alu_src1 | alu_src2;
             end
             `XOR_OP,`XORI_OP: begin
-                alu_result = alu_src1 ^ alu_src2;
+                alu_result <= alu_src1 ^ alu_src2;
             end
             `SLL_OP,`SLLV_OP: begin
-                alu_result = alu_src2<<alu_src1[4:0]; // 移位量为5位立即数
+                alu_result <= alu_src2<<alu_src1[4:0]; // 移位量为5位立即数
             end
             `SRL_OP,`SRLV_OP: begin
-                alu_result = alu_src2>>alu_src1[4:0];
+                alu_result <= alu_src2>>alu_src1[4:0];
             end
             `SRA_OP,`SRAV_OP:// 算术右移
             begin
-                alu_result = ({32{alu_src2[31]}} << (6'd32-{1'b0,alu_src1[4:0]})) // 0xFFFF左移(32-移位量)
+                alu_result <= ({32{alu_src2[31]}} << (6'd32-{1'b0,alu_src1[4:0]})) // 0xFFFF左移(32-移位量)
                 | alu_src2>> alu_src1[4:0]; // 将前者运算结果和alu_src2右移结果进行或运算
             end
             `LUI_OP: begin
-                alu_result = alu_src2;
+                alu_result <= alu_src2;
             end
             `JAL_OP: begin
-                alu_result = link_addr_i;
+                alu_result <= link_addr_i;
+            end
+            `MFHI_OP: begin
+                alu_result <= HI;
+            end
+            `MFLO_OP: begin
+                alu_result <= LO;
+            end
+            `MTHI_OP: begin
+                whilo_o <= `WriteEnable;
+                hi_o <= alu_src1;
+                lo_o <= LO;
+            end
+            `MTLO_OP: begin
+                whilo_o <= `WriteEnable;
+                hi_o <= HI;
+                lo_o <= alu_src1;
             end
             default: begin
-                alu_result = `ZeroWord;
+                alu_result <= `ZeroWord;
+                whilo_o <= `WriteDisable;
+                hi_o <= `ZeroWord;
+                lo_o <= `ZeroWord;
             end
         endcase
     end

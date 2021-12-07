@@ -104,6 +104,7 @@
 `define MFLO_OP 6'b100011
 `define MTHI_OP 6'b100100
 `define MTLO_OP 6'b100101
+//
 `define NOP_OP 6'b111111
 
 // 操作码
@@ -147,5 +148,11 @@
 `define EXE_BNE 6'b000101
 `define EXE_JAL 6'b000011
 `define EXE_JR 6'b001000
+
+// 移动指令
+`define EXE_MFHI 6'b010000
+`define EXE_MFLO 6'b010010
+`define EXE_MTHI 6'b010001
+`define EXE_MTLO 6'b010011
 
 `define EXE_SPECIAL_INST 6'b000000
