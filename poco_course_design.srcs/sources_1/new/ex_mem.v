@@ -48,7 +48,10 @@ module ex_mem(
 
            output reg[`AluOpBus] mem_aluop,
            output reg[`RegBus] mem_mem_addr,
-           output reg[`RegBus] mem_reg2
+           output reg[`RegBus] mem_reg2,
+
+           // 来自ctrl
+           input wire[5:0] stall
        );
 
 always @(posedge clk) begin
@@ -63,7 +66,18 @@ always @(posedge clk) begin
         mem_lo <= `ZeroWord;
         mem_whilo <= `WriteDisable;
     end
-    else begin
+    else if(stall[3]==`Stop && stall[4]==`NoStop) begin
+        mem_wd <= `NOPRegAddr;
+        mem_wreg <= `WriteDisable;
+        mem_wdata <= `ZeroWord;
+        mem_aluop <= `NOP_OP;
+        mem_mem_addr <= `ZeroWord;
+        mem_reg2 <= `ZeroWord;
+        mem_hi <= `ZeroWord;
+        mem_lo <= `ZeroWord;
+        mem_whilo <= `WriteDisable;
+    end
+    else if(stall[3]==`NoStop) begin
         mem_wd <= ex_wd;
         mem_wreg <= ex_wreg;
         mem_wdata <= ex_wdata;
@@ -73,6 +87,18 @@ always @(posedge clk) begin
         mem_hi <= ex_hi;
         mem_lo <= ex_lo;
         mem_whilo <= ex_whilo;
-    end // if
+    end
+    // else begin
+    //     mem_wd <= ex_wd;
+    //     mem_wreg <= ex_wreg;
+    //     mem_wdata <= ex_wdata;
+    //     mem_aluop <= ex_aluop;
+    //     mem_mem_addr <= ex_mem_addr;
+    //     mem_reg2 <= ex_reg2;
+    //     mem_hi <= ex_hi;
+    //     mem_lo <= ex_lo;
+    //     mem_whilo <= ex_whilo;
+    // end
+    // if
 end // always
 endmodule

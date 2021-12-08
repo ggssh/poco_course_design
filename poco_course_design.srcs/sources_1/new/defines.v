@@ -64,6 +64,10 @@
 `define InstInvalid 1'b1
 `define AluOpBus 5:0 // 提前预留好之后指令的位置
 
+// ctrl模块
+`define Stop 1'b1// 流水线暂停
+`define NoStop 1'b0// 流水线继续
+
 // alu_op
 `define ADD_OP 6'b000000
 `define SUB_OP 6'b000001

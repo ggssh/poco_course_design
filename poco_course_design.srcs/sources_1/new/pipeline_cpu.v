@@ -122,6 +122,11 @@ wire[`RegAddrBus] reg2_addr;
 wire[`RegBus] reg1_data;
 wire[`RegBus] reg2_data;
 
+// 暂停机制相关
+wire[5:0] stall;
+wire id_stallreq;
+wire ex_stallreq;
+
 // 连接MEM和data RAM
 // 来自mem
 // wire ram_ce;
@@ -138,7 +143,8 @@ pc_reg pc_reg0(
            .branch_flag_i(branch_flag),
            .branch_target_address_i(branch_target_address),
            .pc(rom_addr_o),// pc的值同样也要送到id和ex中,进行跳转
-           .ce(rom_ce_o)
+           .ce(rom_ce_o),
+           .stall(stall)
        );
 
 // 流水线寄存器
@@ -149,7 +155,8 @@ if_id if_id0(
           .if_pc(rom_addr_o),
           .if_inst(rom_data_i),
           .id_pc(id_pc_i),
-          .id_inst(id_inst_i)
+          .id_inst(id_inst_i),
+          .stall(stall)
       );
 
 id id0(
@@ -181,7 +188,9 @@ id id0(
        .ex_wd_i(ex_wd_o),
        .mem_wreg_i(mem_wreg_o),
        .mem_wdata_i(mem_wdata_o),
-       .mem_wd_i(mem_wd_o)
+       .mem_wd_i(mem_wd_o),
+       // 暂停机制
+       .stallreq(id_stallreq)
    );
 
 id_ex id_ex0(
@@ -196,6 +205,7 @@ id_ex id_ex0(
           .id_link_address(id_link_addr_o),
           .id_is_in_delayslot(id_is_in_delayslot_o),
           .next_inst_in_delayslot_i(next_inst_in_delayslot_o),
+          .stall(stall),
           .ex_aluop(ex_aluop_i),
           .ex_reg1(ex_reg1_i),
           .ex_reg2(ex_reg2_i),
@@ -233,7 +243,8 @@ ex ex0(
        .reg2_o(ex_reg2_o),
        .hi_o(ex_hi_o),
        .lo_o(ex_lo_o),
-       .whilo_o(ex_whilo_o)
+       .whilo_o(ex_whilo_o),
+       .stallreq(ex_stallreq)
    );
 
 ex_mem ex_mem0(
@@ -256,7 +267,8 @@ ex_mem ex_mem0(
            .ex_reg2(ex_reg2_o),
            .mem_aluop(mem_aluop_i),
            .mem_mem_addr(mem_mem_addr_i),
-           .mem_reg2(mem_reg2_i)
+           .mem_reg2(mem_reg2_i),
+           .stall(stall)
        );
 
 mem mem0(
@@ -302,7 +314,8 @@ mem_wb mem_wb0(
            .wb_wreg(wb_wreg_i),
            .wb_hi(wb_hi_i),
            .wb_lo(wb_lo_i),
-           .wb_whilo(wb_whilo_i)
+           .wb_whilo(wb_whilo_i),
+           .stall(stall)
        );
 
 hilo_reg hilo_reg0(
@@ -328,4 +341,11 @@ regfile regfile0(
             .rdata1(reg1_data),
             .rdata2(reg2_data)
         );
+
+ctrl ctrl0(
+         .rst(rst),
+         .stallreq_from_ex(ex_stallreq),
+         .stallreq_from_id(id_stallreq),
+         .stall(stall)
+     );
 endmodule

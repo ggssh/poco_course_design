@@ -64,7 +64,10 @@ module id(
 
            // 送到 pc
            output reg branch_flag_o,
-           output reg[`RegBus] branch_target_address_o
+           output reg[`RegBus] branch_target_address_o,
+
+           // 送到ctrl模块
+           output reg stallreq
        );
 
 wire[5:0] op = inst_i[31:26];

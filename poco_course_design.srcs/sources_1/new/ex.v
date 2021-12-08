@@ -59,7 +59,10 @@ module ex(
            // store && load 送到ex/mem
            output wire[`AluOpBus] aluop_o,
            output wire[`RegBus] mem_addr_o,
-           output wire[`RegBus] reg2_o
+           output wire[`RegBus] reg2_o,
+
+           // 送到ctrl
+           output reg stallreq
        );
 
 wire[`RegBus] alu_src2_mux;

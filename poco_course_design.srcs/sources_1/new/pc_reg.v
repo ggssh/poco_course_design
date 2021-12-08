@@ -24,6 +24,7 @@
 module pc_reg(
            input wire clk,
            input wire rst,
+           input wire[5:0] stall,// 来自控制模块ctrl
 
            output reg[`InstAddrBus] pc,//pc的宽度为6,对应rom的地址宽度为6位
            output reg ce,//指令存储器使能信号
@@ -46,10 +47,11 @@ always @(posedge clk) begin
     if (ce == `ChipDisable) begin
         pc <= 32'h0;//指令存储器使能信号无效时pc保持为0
     end
-    else begin
+    else if(stall[0]==`NoStop) begin// 这里改了
         if (branch_flag_i==`Branch) begin
             pc <= branch_target_address_i;
-        end else begin
+        end
+        else begin
             pc <= pc + 32'h4; //指令存储器使能信号有效时,pc在每个时钟加4
         end
     end

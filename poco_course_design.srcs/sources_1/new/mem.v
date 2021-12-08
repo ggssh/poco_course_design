@@ -52,6 +52,7 @@ module mem(
            output reg[3:0] mem_sel_o,
            output wire mem_we_o,
            output reg mem_ce_o
+
        );
 
 // have problem
