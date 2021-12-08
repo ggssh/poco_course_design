@@ -62,12 +62,24 @@ module ex(
            output wire[`RegBus] reg2_o,
 
            // 送到ctrl
-           output reg stallreq
+           output reg stallreq,
+
+           // 来自除法模块的输入
+           input wire[`DoubleRegBus] div_result_i,
+           input wire div_ready_i,
+
+           // 到除法模块的输出
+           output reg[`RegBus] div_opdata1_o,
+           output reg[`RegBus] div_opdata2_o,
+           output reg div_start_o,
+           output reg signed_div_o
        );
 
 wire[`RegBus] alu_src2_mux;
 wire[`RegBus] result_sum;
 wire src1_lt_src2;
+
+reg stallreq_for_div;// 是否由于除法运算导致流水线暂停
 
 // 存储,加载
 assign aluop_o = alu_control;// 传递aluop直到mem模块
@@ -113,10 +125,20 @@ always @(*) begin
         whilo_o<=`WriteDisable;
         hi_o<=`ZeroWord;
         lo_o<=`ZeroWord;
+        stallreq_for_div <= `NoStop;
+        div_opdata1_o <= `ZeroWord;
+        div_opdata2_o <= `ZeroWord;
+        div_start_o <= `DivStop;
+        signed_div_o <= 1'b0;
     end
     else begin
         wd_o<=wd_i;
         wreg_o<=wreg_i;
+        stallreq_for_div <= `NoStop;
+        div_opdata1_o <= `ZeroWord;
+        div_opdata2_o <= `ZeroWord;
+        div_start_o <= `DivStop;
+        signed_div_o <= 1'b0;
         case(alu_control)
             `ADD_OP,`SUB_OP,`ADDU_OP,`ADDIU_OP,`ADDI_OP,`SUBU_OP: begin
                 alu_result <= result_sum;
@@ -169,13 +191,79 @@ always @(*) begin
                 hi_o <= HI;
                 lo_o <= alu_src1;
             end
+            `DIV_OP: begin
+                if (div_ready_i==`DivResultNotReady) begin
+                    div_opdata1_o <= alu_src1;// 被除数
+                    div_opdata2_o <= alu_src2;// 除数
+                    div_start_o <= `DivStart;// 开始除法运算
+                    signed_div_o <= 1'b1;// 有符号除法
+                    stallreq_for_div <= `Stop;// 请求流水线暂停
+                end
+                else if (div_ready_i==`DivResultReady) begin
+                    div_opdata1_o <= alu_src1;
+                    div_opdata2_o <= alu_src2;
+                    div_start_o <= `DivStop;
+                    signed_div_o <= 1'b1;
+                    stallreq_for_div <= `NoStop;// 不再请求流水线暂停
+                    //往HI,LO里面写
+                    whilo_o <= `WriteEnable;
+                    hi_o <= div_result_i[63:32];
+                    lo_o <= div_result_i[31:0];
+                end
+                else begin
+                    div_opdata1_o <= `ZeroWord;
+                    div_opdata2_o <= `ZeroWord;
+                    div_start_o <= `DivStop;
+                    signed_div_o <= 1'b0;
+                    stallreq_for_div <= `NoStop;
+                end
+            end
+            `DIVU_OP: begin
+                if (div_ready_i==`DivResultNotReady) begin
+                    div_opdata1_o <= alu_src1;// 被除数
+                    div_opdata2_o <= alu_src2;// 除数
+                    div_start_o <= `DivStart;// 开始除法运算
+                    signed_div_o <= 1'b0;// 有符号除法
+                    stallreq_for_div <= `Stop;// 请求流水线暂停
+                end
+                else if (div_ready_i==`DivResultReady) begin
+                    div_opdata1_o <= alu_src1;
+                    div_opdata2_o <= alu_src2;
+                    div_start_o <= `DivStop;
+                    signed_div_o <= 1'b0;
+                    stallreq_for_div <= `NoStop;// 不再请求流水线暂停
+                    //往HI,LO里面写
+                    whilo_o <= `WriteEnable;
+                    hi_o <= div_result_i[63:32];
+                    lo_o <= div_result_i[31:0];
+                end
+                else begin
+                    div_opdata1_o <= `ZeroWord;
+                    div_opdata2_o <= `ZeroWord;
+                    div_start_o <= `DivStop;
+                    signed_div_o <= 1'b0;
+                    stallreq_for_div <= `NoStop;
+                end
+            end
             default: begin
                 alu_result <= `ZeroWord;
                 whilo_o <= `WriteDisable;
                 hi_o <= `ZeroWord;
                 lo_o <= `ZeroWord;
+                stallreq_for_div <= `NoStop;
+                div_opdata1_o <= `ZeroWord;
+                div_opdata2_o <= `ZeroWord;
+                div_start_o <= `DivStop;
+                signed_div_o <= 1'b0;
             end
         endcase
     end
 end
+
+// 暂停流水线
+always @(*) begin
+    stallreq <= stallreq_for_div;
+end
+
+// 修改HI,LO
 endmodule

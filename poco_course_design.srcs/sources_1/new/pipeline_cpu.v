@@ -127,6 +127,14 @@ wire[5:0] stall;
 wire id_stallreq;
 wire ex_stallreq;
 
+// 除法相关
+wire div_start;
+wire[31:0] div_opdata1;
+wire[31:0] div_opdata2;
+wire signed_div;
+wire[63:0] div_result;
+wire div_ready;
+
 // 连接MEM和data RAM
 // 来自mem
 // wire ram_ce;
@@ -244,7 +252,14 @@ ex ex0(
        .hi_o(ex_hi_o),
        .lo_o(ex_lo_o),
        .whilo_o(ex_whilo_o),
-       .stallreq(ex_stallreq)
+       .stallreq(ex_stallreq),
+       //除法
+       .div_result_i(div_result),
+       .div_ready_i(div_ready),
+       .div_opdata1_o(div_opdata1),
+       .div_opdata2_o(div_opdata2),
+       .div_start_o(div_start),
+       .signed_div_o(signed_div)
    );
 
 ex_mem ex_mem0(
@@ -348,4 +363,16 @@ ctrl ctrl0(
          .stallreq_from_id(id_stallreq),
          .stall(stall)
      );
+
+div div0(
+        .clk(clk),
+        .rst(rst),
+        .signed_div_i(signed_div),
+        .opdata1_i(div_opdata1),
+        .opdata2_i(div_opdata2),
+        .start_i(div_start),
+        .annul_i(1'b0),// 不禁止除法
+        .result_o(div_result),
+        .ready_o(div_ready)
+    );
 endmodule

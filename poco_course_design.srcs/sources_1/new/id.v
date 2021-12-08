@@ -67,7 +67,7 @@ module id(
            output reg[`RegBus] branch_target_address_o,
 
            // 送到ctrl模块
-           output reg stallreq
+           output wire stallreq
        );
 
 wire[5:0] op = inst_i[31:26];
@@ -88,6 +88,8 @@ wire[`RegBus] imm_sll2_signedext;
 assign pc_plus_8 = pc_i + 8; // 当前译码阶段指令后面第二条指令
 assign pc_plus_4 = pc_i + 4; // 后面紧跟着的那条指令
 assign imm_sll2_signedext = {{14{inst_i[15]}},inst_i[15:0],2'b00};// 立即数offset左移两位并进行有符号扩展
+
+assign stallreq = `NoStop;// 不停止
 
 always @(*) begin
     if(rst == `RstEnable) begin
@@ -226,32 +228,46 @@ always @(*) begin
                                 reg2_read_o <= 1'b1;
                                 instvalid <= `InstValid;
                             end
-                            `EXE_MFHI:begin
+                            `EXE_MFHI: begin
                                 wreg_o <= `WriteEnable;
                                 aluop_o <= `MFHI_OP;
                                 reg1_read_o <= 1'b0;
                                 reg2_read_o <= 1'b0;
                                 instvalid <= `InstValid;
                             end
-                            `EXE_MFLO:begin
+                            `EXE_MFLO: begin
                                 wreg_o <= `WriteEnable;
                                 aluop_o <= `MFLO_OP;
                                 reg1_read_o <= 1'b0;
                                 reg2_read_o <= 1'b0;
                                 instvalid <= `InstValid;
                             end
-                            `EXE_MTHI:begin
+                            `EXE_MTHI: begin
                                 wreg_o <= `WriteDisable;
                                 aluop_o <= `MTHI_OP;
                                 reg1_read_o <= 1'b1;
                                 reg2_read_o <= 1'b0;
                                 instvalid <= `InstValid;
                             end
-                            `EXE_MTLO:begin
+                            `EXE_MTLO: begin
                                 wreg_o <= `WriteDisable;
                                 aluop_o <= `MTLO_OP;
                                 reg1_read_o <= 1'b1;
                                 reg2_read_o <= 1'b0;
+                                instvalid <= `InstValid;
+                            end
+                            `EXE_DIV: begin
+                                wreg_o <= `WriteDisable;
+                                aluop_o <= `DIV_OP;
+                                reg1_read_o <= 1'b1;
+                                reg2_read_o <= 1'b1;
+                                instvalid <= `InstValid;
+                            end
+                            `EXE_DIVU: begin
+                                wreg_o <= `WriteDisable;
+                                aluop_o <= `DIVU_OP;
+                                reg1_read_o <= 1'b1;
+                                reg2_read_o <= 1'b1;
                                 instvalid <= `InstValid;
                             end
                             default: begin

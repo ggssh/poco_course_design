@@ -151,7 +151,8 @@
 `define EXE_ADDI 6'b001000
 `define EXE_SLTI 6'b001010
 `define EXE_SLTIU 6'b001011
-
+`define EXE_DIV 6'b011010
+`define EXE_DIVU 6'b011011
 
 // 加载存储指令
 `define EXE_LW 6'b100011

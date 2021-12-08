@@ -33,7 +33,7 @@ end
 initial begin
     rst=1;
     #100 rst=0;
-    #1000 $stop;
+    #3000 $stop;// 给的时间要足够长,方便测试
 end
 mips_sopc1 mips_sopc10(
                .clk(clk),
