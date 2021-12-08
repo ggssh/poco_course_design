@@ -40,7 +40,7 @@ always @(posedge clk) begin
         hi_o <= `ZeroWord;
         lo_o <= `ZeroWord;
     end
-    else if (rst == `WriteEnable) begin
+    else if (we == `WriteEnable) begin
         hi_o <= hi_i;
         lo_o <= lo_i;
     end

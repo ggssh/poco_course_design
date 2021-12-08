@@ -72,7 +72,17 @@ module ex(
            output reg[`RegBus] div_opdata1_o,
            output reg[`RegBus] div_opdata2_o,
            output reg div_start_o,
-           output reg signed_div_o
+           output reg signed_div_o,
+
+           // 来自乘法模块的输入
+           input wire[`DoubleRegBus] mult_result_i,
+           input wire mult_ready_i,
+
+           // 到乘法模块的输出
+           output reg[`RegBus] mult_opdata1_o,
+           output reg[`RegBus] mult_opdata2_o,
+           output reg mult_start_o,
+           output reg signed_mult_o
        );
 
 wire[`RegBus] alu_src2_mux;
@@ -80,6 +90,7 @@ wire[`RegBus] result_sum;
 wire src1_lt_src2;
 
 reg stallreq_for_div;// 是否由于除法运算导致流水线暂停
+reg stallreg_for_mult;// 是否由于乘法运算导致流水线暂停
 
 // 存储,加载
 assign aluop_o = alu_control;// 传递aluop直到mem模块
@@ -126,19 +137,23 @@ always @(*) begin
         hi_o<=`ZeroWord;
         lo_o<=`ZeroWord;
         stallreq_for_div <= `NoStop;
+        stallreg_for_mult <= `NoStop;
         div_opdata1_o <= `ZeroWord;
         div_opdata2_o <= `ZeroWord;
         div_start_o <= `DivStop;
         signed_div_o <= 1'b0;
+        signed_mult_o <= 1'b0;
     end
     else begin
         wd_o<=wd_i;
         wreg_o<=wreg_i;
         stallreq_for_div <= `NoStop;
+        stallreg_for_mult <= `NoStop;
         div_opdata1_o <= `ZeroWord;
         div_opdata2_o <= `ZeroWord;
         div_start_o <= `DivStop;
         signed_div_o <= 1'b0;
+        signed_mult_o <= 1'b0;
         case(alu_control)
             `ADD_OP,`SUB_OP,`ADDU_OP,`ADDIU_OP,`ADDI_OP,`SUBU_OP: begin
                 alu_result <= result_sum;
@@ -245,16 +260,74 @@ always @(*) begin
                     stallreq_for_div <= `NoStop;
                 end
             end
+            `MULT_OP: begin
+                if(mult_ready_i==`MultResultNotReady) begin
+                    mult_opdata1_o <= alu_src1;
+                    mult_opdata2_o <= alu_src2;
+                    signed_mult_o <= 1'b1;
+                    mult_start_o <= `MultStart;
+                    stallreg_for_mult <= `Stop;//请求流水线暂停
+                end
+                else if(mult_ready_i==`MultResultReady) begin
+                    mult_opdata1_o <= alu_src1;
+                    mult_opdata2_o <= alu_src2;
+                    signed_mult_o <= 1'b0;
+                    mult_start_o <= `MultStop;
+                    stallreg_for_mult <= `NoStop;
+                    // 往HI,LO里面写
+                    whilo_o <= `WriteEnable;
+                    hi_o <= mult_result_i[63:32];
+                    lo_o <= mult_result_i[31:0];
+                end
+                else begin
+                    signed_mult_o <= 1'b0;
+                    mult_opdata1_o <= `ZeroWord;
+                    mult_opdata2_o <= `ZeroWord;
+                    mult_start_o <= `MultStop;
+                    stallreg_for_mult <= `NoStop;
+                end
+            end
+            `MULTU_OP: begin
+                if(mult_ready_i==`MultResultNotReady) begin
+                    mult_opdata1_o <= alu_src1;
+                    mult_opdata2_o <= alu_src2;
+                    signed_mult_o <= 1'b0;
+                    mult_start_o <= `MultStart;
+                    stallreg_for_mult <= `Stop;//请求流水线暂停
+                end
+                else if(mult_ready_i==`MultResultReady) begin
+                    mult_opdata1_o <= alu_src1;
+                    mult_opdata2_o <= alu_src2;
+                    signed_mult_o <= 1'b0;
+                    mult_start_o <= `MultStop;
+                    stallreg_for_mult <= `NoStop;
+                    // 往HI,LO里面写
+                    whilo_o <= `WriteEnable;
+                    hi_o <= mult_result_i[63:32];
+                    lo_o <= mult_result_i[31:0];
+                end
+                else begin
+                    signed_mult_o <= 1'b0;
+                    mult_opdata1_o <= `ZeroWord;
+                    mult_opdata2_o <= `ZeroWord;
+                    mult_start_o <= `MultStop;
+                    stallreg_for_mult <= `NoStop;
+                end
+            end
             default: begin
                 alu_result <= `ZeroWord;
                 whilo_o <= `WriteDisable;
                 hi_o <= `ZeroWord;
                 lo_o <= `ZeroWord;
                 stallreq_for_div <= `NoStop;
+                stallreg_for_mult <= `NoStop;
                 div_opdata1_o <= `ZeroWord;
                 div_opdata2_o <= `ZeroWord;
                 div_start_o <= `DivStop;
                 signed_div_o <= 1'b0;
+                mult_opdata1_o <= `ZeroWord;
+                mult_opdata2_o <= `ZeroWord;
+                mult_start_o <= `MultStop;
             end
         endcase
     end
@@ -262,7 +335,7 @@ end
 
 // 暂停流水线
 always @(*) begin
-    stallreq <= stallreq_for_div;
+    stallreq <= stallreq_for_div||stallreg_for_mult;
 end
 
 // 修改HI,LO

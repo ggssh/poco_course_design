@@ -135,6 +135,14 @@ wire signed_div;
 wire[63:0] div_result;
 wire div_ready;
 
+// 乘法相关
+wire mult_start;
+wire[31:0] mult_opdata1;
+wire[31:0] mult_opdata2;
+wire[63:0] mult_result;
+wire signed_mult;
+wire mult_ready;
+
 // 连接MEM和data RAM
 // 来自mem
 // wire ram_ce;
@@ -259,7 +267,14 @@ ex ex0(
        .div_opdata1_o(div_opdata1),
        .div_opdata2_o(div_opdata2),
        .div_start_o(div_start),
-       .signed_div_o(signed_div)
+       .signed_div_o(signed_div),
+       // 乘法
+       .mult_result_i(mult_result),
+       .mult_ready_i(mult_ready),
+       .mult_opdata1_o(mult_opdata1),
+       .mult_opdata2_o(mult_opdata2),
+       .mult_start_o(mult_start),
+       .signed_mult_o(signed_mult)
    );
 
 ex_mem ex_mem0(
@@ -375,4 +390,15 @@ div div0(
         .result_o(div_result),
         .ready_o(div_ready)
     );
+
+mult mult0(
+         .clk(clk),
+         .rst(rst),
+         .opdata1_i(mult_opdata1),
+         .opdata2_i(mult_opdata2),
+         .start_i(mult_start),
+         .result_o(mult_result),
+         .ready_o(mult_ready),
+         .signed_mult_i(signed_mult)
+     );
 endmodule

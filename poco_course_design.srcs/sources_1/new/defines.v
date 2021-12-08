@@ -78,6 +78,15 @@
 `define DivStart 1'b1
 `define DivStop 1'b0
 
+// mul乘法模块
+`define MultFree 2'b00
+`define MultOn 2'b01
+`define MultEnd 2'b10
+`define MultResultReady 1'b1
+`define MultResultNotReady 1'b0
+`define MultStart 1'b1
+`define MultStop 1'b0
+
 // alu_op
 `define ADD_OP 6'b000000
 `define SUB_OP 6'b000001
@@ -153,6 +162,8 @@
 `define EXE_SLTIU 6'b001011
 `define EXE_DIV 6'b011010
 `define EXE_DIVU 6'b011011
+`define EXE_MULT 6'b011000
+`define EXE_MULTU 6'b011001
 
 // 加载存储指令
 `define EXE_LW 6'b100011
